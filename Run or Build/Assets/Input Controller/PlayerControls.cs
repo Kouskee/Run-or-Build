@@ -222,6 +222,120 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Gambler"",
+            ""id"": ""882269e3-0719-4b61-a6d4-dfd8ae2c7c8e"",
+            ""actions"": [
+                {
+                    ""name"": ""Change Level"",
+                    ""type"": ""Button"",
+                    ""id"": ""48c3589d-4377-4468-8650-60c86b5c1b71"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Flying"",
+                    ""type"": ""Value"",
+                    ""id"": ""eca4dcbb-246b-4d27-b192-9bff55f0cff6"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""8fc91119-0a9b-4a60-a6df-9198add03f82"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=0)"",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Change Level"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""cae6b796-f5a3-424d-bbed-78273eed721d"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale"",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Change Level"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""eac5da77-ef86-4b14-b1be-c3903d0c90f6"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": ""Scale(factor=2)"",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Change Level"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""13d4e8bf-fc09-4b14-8ce1-0ce6d0b55274"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Flying"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""d1bf322c-1cf0-4cf2-8058-da1461f68818"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Flying"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""801d59c4-4ebb-4ffb-8b26-73f844edbd53"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Flying"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""0faa621a-5bf6-483a-a8f6-d5a74d81c1f9"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Flying"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""fbd7b991-b088-4d9e-97ce-4fb6c35a6735"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard and mouse"",
+                    ""action"": ""Flying"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                }
+            ]
         }
     ],
     ""controlSchemes"": [
@@ -259,6 +373,10 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_RunnerMap_Move = m_RunnerMap.FindAction("Move", throwIfNotFound: true);
         m_RunnerMap_Jump = m_RunnerMap.FindAction("Jump", throwIfNotFound: true);
         m_RunnerMap_Dash = m_RunnerMap.FindAction("Dash", throwIfNotFound: true);
+        // Gambler
+        m_Gambler = asset.FindActionMap("Gambler", throwIfNotFound: true);
+        m_Gambler_ChangeLevel = m_Gambler.FindAction("Change Level", throwIfNotFound: true);
+        m_Gambler_Flying = m_Gambler.FindAction("Flying", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -363,6 +481,47 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         }
     }
     public RunnerMapActions @RunnerMap => new RunnerMapActions(this);
+
+    // Gambler
+    private readonly InputActionMap m_Gambler;
+    private IGamblerActions m_GamblerActionsCallbackInterface;
+    private readonly InputAction m_Gambler_ChangeLevel;
+    private readonly InputAction m_Gambler_Flying;
+    public struct GamblerActions
+    {
+        private @PlayerControls m_Wrapper;
+        public GamblerActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+        public InputAction @ChangeLevel => m_Wrapper.m_Gambler_ChangeLevel;
+        public InputAction @Flying => m_Wrapper.m_Gambler_Flying;
+        public InputActionMap Get() { return m_Wrapper.m_Gambler; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(GamblerActions set) { return set.Get(); }
+        public void SetCallbacks(IGamblerActions instance)
+        {
+            if (m_Wrapper.m_GamblerActionsCallbackInterface != null)
+            {
+                @ChangeLevel.started -= m_Wrapper.m_GamblerActionsCallbackInterface.OnChangeLevel;
+                @ChangeLevel.performed -= m_Wrapper.m_GamblerActionsCallbackInterface.OnChangeLevel;
+                @ChangeLevel.canceled -= m_Wrapper.m_GamblerActionsCallbackInterface.OnChangeLevel;
+                @Flying.started -= m_Wrapper.m_GamblerActionsCallbackInterface.OnFlying;
+                @Flying.performed -= m_Wrapper.m_GamblerActionsCallbackInterface.OnFlying;
+                @Flying.canceled -= m_Wrapper.m_GamblerActionsCallbackInterface.OnFlying;
+            }
+            m_Wrapper.m_GamblerActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @ChangeLevel.started += instance.OnChangeLevel;
+                @ChangeLevel.performed += instance.OnChangeLevel;
+                @ChangeLevel.canceled += instance.OnChangeLevel;
+                @Flying.started += instance.OnFlying;
+                @Flying.performed += instance.OnFlying;
+                @Flying.canceled += instance.OnFlying;
+            }
+        }
+    }
+    public GamblerActions @Gambler => new GamblerActions(this);
     private int m_KeyboardandmouseSchemeIndex = -1;
     public InputControlScheme KeyboardandmouseScheme
     {
@@ -386,5 +545,10 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         void OnMove(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
         void OnDash(InputAction.CallbackContext context);
+    }
+    public interface IGamblerActions
+    {
+        void OnChangeLevel(InputAction.CallbackContext context);
+        void OnFlying(InputAction.CallbackContext context);
     }
 }

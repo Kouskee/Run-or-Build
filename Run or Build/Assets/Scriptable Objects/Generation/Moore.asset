@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ce18e3db0db7324786340708bd9d611, type: 3}
+  m_Name: Moore
+  m_EditorClassIdentifier: 
+  algorithm: 4
+  randomSeed: 1
+  seed: 0.91
+  fillAmount: 45
+  smoothAmount: 1
+  clearAmount: 56
+  intervalToExit: 3
+  minPathWidth: 35
+  maxPathWidth: 44
+  maxPathChange: 5
+  roughness: 41
+  windyness: 39
+  edgesAreWalls: 1
+  modifier: 0.072
