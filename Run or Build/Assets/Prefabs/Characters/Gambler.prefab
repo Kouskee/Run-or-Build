@@ -336,7 +336,7 @@ SpriteRenderer:
   m_Size: {x: 1.28, y: 1.28}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &2085149457903828680
@@ -352,7 +352,7 @@ GameObject:
   - component: {fileID: 462423698}
   - component: {fileID: 2085149457903828684}
   - component: {fileID: 7766573738504166860}
-  - component: {fileID: 2085149457903828686}
+  - component: {fileID: 6214004669462839492}
   - component: {fileID: 462423704}
   - component: {fileID: 2582628050519562089}
   - component: {fileID: 2091283876539645090}
@@ -398,10 +398,6 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   _config: {fileID: 11400000, guid: b3508c0c11353bb45a652c0c4a0699d9, type: 2}
-  _platforms:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!114 &462423698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -416,7 +412,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  _maxEnergy: 100
 --- !u!114 &2085149457903828684
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -496,8 +491,8 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!60 &2085149457903828686
-PolygonCollider2D:
+--- !u!61 &6214004669462839492
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -513,26 +508,15 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.64, y: 0.64}
-    newSize: {x: 1.28, y: 1.28}
+    oldSize: {x: 1.0769231, y: 2.3076923}
+    newSize: {x: 1.0769231, y: 2.3076923}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Points:
-    m_Paths:
-    - - {x: -0.32270342, y: -0.13}
-      - {x: -0.26555735, y: -0.25}
-      - {x: -0.16211563, y: -0.32}
-      - {x: 0.18369055, y: -0.32}
-      - {x: 0.26181483, y: -0.25}
-      - {x: 0.3181854, y: -0.17}
-      - {x: 0.31860018, y: 0.14}
-      - {x: 0.26205015, y: 0.25}
-      - {x: 0.1339581, y: 0.32}
-      - {x: -0.1246168, y: 0.32}
-      - {x: -0.24158216, y: 0.25}
-      - {x: -0.31598735, y: 0.14}
+  serializedVersion: 2
+  m_Size: {x: 1.0769231, y: 2.3076923}
+  m_EdgeRadius: 0
 --- !u!95 &462423704
 Animator:
   serializedVersion: 4

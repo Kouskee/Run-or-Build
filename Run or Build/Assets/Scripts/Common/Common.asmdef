@@ -1,7 +1,9 @@
 {
     "name": "Common",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:3349c420235a8fc49bb2386cd77fa7e2"
+    ],
     "includePlatforms": [
         "Editor",
         "WSA",

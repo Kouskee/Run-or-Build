@@ -16,7 +16,7 @@ MonoBehaviour:
   _jumpForce: 27
   _fallMultiplier: 1
   _mass: 5
-  _gravityScale: -4.07
+  _gravityScale: 0
   _coyoteTime: 0.1
   _speed: 10.43
   _speedAir: 12.34

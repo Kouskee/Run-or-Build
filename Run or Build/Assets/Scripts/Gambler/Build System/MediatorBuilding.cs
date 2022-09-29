@@ -1,63 +1,63 @@
-using Gambler.Build_System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UnityEngine.UI;
 
 public class MediatorBuilding : MonoBehaviour
 {
     [SerializeField] private Tilemap _tileMap;
     [SerializeField] private BuildingSystem _buildingSystem;
 
-    private Button _button;
-    private TMP_Text _text;
-    private Camera _camera;
-    private TileBase _tile;
-    
-    private TileFabric _tileFabric;
-    private BuildingFabric _buildingFabric;
+    private Inventory _inventory;
+    private InventorySlot _slot;
 
-    public void Init(BuildingFabric buildingFabric, TileFabric tileFabric)
+    public void Init(Inventory inventory)
     {
-        _buildingFabric = buildingFabric;
-        _tileFabric = tileFabric;
-        _buildingSystem.Init(buildingFabric, tileFabric);
+        _inventory = inventory;
+        _buildingSystem.Init(inventory, _tileMap);
     }
     
-    private void Awake()
+    public void ClearSelection()
     {
-        _camera = Camera.main;
+        _buildingSystem.ClearHashObjectsOnClient();
     }
     
-    public void CreateBuilding(Button button)
+    public void CreateBuilding(string name)
     {
-        var config = _buildingFabric.GetBuilding(button.name);
-        _buildingSystem.StartPlacingBuilding(config);
+        var slot = _inventory.GetSlot(name);
+        ReturnBuilding(slot);
+        _buildingSystem.StartPlacingBuilding(slot);
     }
 
-    public void CreateTilesTest(Button button)
+    public void CreateTile(string name)
     {
-        _text = button.GetComponentInChildren<TMP_Text>();
-        var config = _tileFabric.GetTile(button.name);
-        _text.text = config.Count.ToString();
-        _tile = config.Tile;
+        var slot = _inventory.GetSlot(name);
+        ReturnBuilding(slot);
+        _buildingSystem.SpawnTile(slot);
     }
 
-    private void Update()
+    private void ReturnBuilding(InventorySlot slot)
     {
-        if (!Input.GetMouseButtonDown(0)) return;
-        if (_tile == null) return;
-
-        var ray = _camera.ScreenPointToRay(Input.mousePosition);
-        var plane = new Plane(Vector3.forward, Vector3.zero);
-        plane.Raycast(ray, out var distance);
-        var clickWorldPos = ray.GetPoint(distance);
-
-        var clickCell = _tileMap.WorldToCell(clickWorldPos);
-        
-        if(_tileMap.GetTile(clickCell) != null) return; 
-        
-        _text.text = (int.Parse(_text.text) - 1).ToString();
-        _tileMap.SetTile(clickCell, _tile);
+        if (_slot != null)
+        {
+            if (_slot != slot) _slot.ReturnBuilding();
+        }
+        _slot = slot;
     }
+
+    // private void Update()
+    // {
+    //     if (!Input.GetMouseButtonDown(0)) return;
+    //     if (_buildingConfig == null) return;
+    //
+    //     var ray = _camera.ScreenPointToRay(Input.mousePosition);
+    //     var plane = new Plane(Vector3.forward, Vector3.zero);
+    //     plane.Raycast(ray, out var distance);
+    //     var clickWorldPos = ray.GetPoint(distance);
+    //
+    //     var clickCell = _tileMap.WorldToCell(clickWorldPos);
+    //     //Debug.Log(_tileMap.GetCellCenterWorld(clickCell)); // робит
+    //     if(_tileMap.GetTile(clickCell) == _buildingConfig.Tile) return; 
+    //     
+    //     _text.text = (int.Parse(_text.text) - 1).ToString();
+    //     _tileMap.SetTile(clickCell, _buildingConfig.Tile);
+    // }
 }

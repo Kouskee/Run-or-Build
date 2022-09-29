@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Tilemaps;
 using Random = UnityEngine.Random;
 
@@ -29,60 +30,64 @@ public class MapFunctions
         }
         return map;
     }
-    
-    /// <summary>
-    /// Draws the map to the screen
-    /// </summary>
-    /// <param name="map">Map that we want to draw</param>
-    /// <param name="tilemap">Tilemap we will draw onto</param>
-    /// <param name="tile">Tile we will draw with</param>
-    public static void RenderMap(int[,] map, Tilemap tilemap, TileBase tile, Vector2Int bound)
+
+    public static int[,] ClearEnter(int[,] map, Vector2Int bound)
     {
 	    var lengthDeletion = 5;
-	    for (int x = 0; x < map.GetUpperBound(0) ; x++) //Loop through the width of the map
-        {
-            for (int y = 0; y < map.GetUpperBound(1); y++) //Loop through the height of the map
-            {
-	            if (map[x, y] == 1) // 1 = tile, 0 = no tile
-	                tilemap.SetTile(new Vector3Int(x, y, 0), tile);
-                else
-	                tilemap.SetTile(new Vector3Int(x, y, 0), null);
+	    for (int x = 0; x < map.GetUpperBound(0); x++) //Loop through the width of the map
+	    {
+		    for (int y = 0; y < map.GetUpperBound(1); y++) //Loop through the height of the map
+		    {
+			    if (y < bound.x && y > bound.y && x < lengthDeletion)
+			    {
+				    if (map[x + 1, bound.x] == 1 && map[x + 1, bound.y] == 1 && map[5, y] == 1)
+					    lengthDeletion = Mathf.Clamp(lengthDeletion + 1, 5, 20);
 
-	            if (y < bound.x && y > bound.y && x < lengthDeletion)
-	            {
-		            if(map[x + 1, bound.x] == 1 && map[x + 1, bound.y] == 1 && map[5, y] == 1)
-		            {
-			            lengthDeletion++;
-		            }
-		            tilemap.SetTile(new Vector3Int(x, y, 0), null);
-	            }
-            }
-        }
+				    map[x, y] = 0;
+			    }
+		    }
+	    }
+
+	    return map;
     }
     
-    /// <summary>
-    /// Renders a map using an offset provided, Useful for having multiple maps on one tilemap
-    /// </summary>
-    /// <param name="map">The map to draw</param>
-    /// <param name="tilemap">The tilemap to draw on</param>
-    /// <param name="tile">The tile to draw with</param>
-    /// <param name="offset">The offset to apply</param>
-    public static void RenderMapWithOffset(int[,] map, Tilemap tilemap, TileBase tile, Vector2Int offset, int[] inputs)
+    public static IEnumerator RenderMapCoroutine(int[,] map, Tilemap tilemap, TileBase tile)
+    {
+	    var lengthDeletion = 5;
+	    for (int x = 0; x < map.GetUpperBound(0); x++) //Loop through the width of the map
+	    {
+		    for (int y = 0; y < map.GetUpperBound(1); y++) //Loop through the height of the map
+		    {
+			    if (map[x, y] == 1) // 1 = tile, 0 = no tile
+				    tilemap.SetTile(new Vector3Int(x, y, 0), tile);
+			    else
+				    tilemap.SetTile(new Vector3Int(x, y, 0), null);
+
+			    //yield return null;
+		    } 
+		    yield return null;
+	    }
+    }
+    
+    public static IEnumerator RenderMapWithOffset(int[,] map, Tilemap tilemap, TileBase tile, Vector2Int offset, int[] inputs)
     {
 	    for (int y = 0; y < map.GetUpperBound(1); y++)
 	    {
 		    if(inputs[y] != 1) continue;
 		    
 		    var zeroTile = true;
-		    for (int x = 1; x < 15; x++)
+		    var count = 15;
+		    for (int x = 1; x < count; x++)
 		    {
-			    if (map[x, y] == 0)
+			    if (map[x, y] == 1)
 			    {
 				    if (map[x + 1, y] == 0 || map[x + 1, y + 1] == 0 || map[x + 1, y - 1] == 0 || map[x, y + 1] == 0 || map[x, y - 1] == 0)
 				    {
 					    zeroTile = true;
 					    break;
 				    }
+
+				    count++;
 			    }
 			    zeroTile = false;
 		    }
@@ -99,354 +104,42 @@ public class MapFunctions
 			    
 			    if(map[x,y] == 1)
 				    tilemap.SetTile(new Vector3Int(x + offset.x, y + offset.y ,0), tile);
+			    //yield return null;
 		    }
+		    yield return null;
 	    }
     }
-
-    /// <summary>
-	/// Creates a cave using perlin noise for the generation process
-	/// </summary>
-	/// <param name="map">the map to be modified</param>
-	/// <param name="modifier">the value we times the position by to get our perlin gen</param>
-	/// <param name="edgesAreWalls">If set to <c>true</c> edges are walls.</param>
-	/// <returns>The noise cave.</returns>
-	public static int[,] PerlinNoiseCave(int[,] map, int intervalExit, float modifier, bool edgesAreWalls)
+    
+	public static int[,] PerlinNoiseCave(int[,] map, int intervalExit, float modifier, bool edgesAreWalls, ref int[] outputs)
     {
         int newPoint;
         for (int x = 0; x < map.GetUpperBound(0); x++)
         {
 	        for (int y = 0; y < map.GetUpperBound(1); y++)
 	        {
-		        //Generate a new point using perlin noise, then round it to a value of either 0 or 1
-		        newPoint = Mathf.RoundToInt(Mathf.PerlinNoise(x * modifier, y * modifier));
-		        map[x, y] = newPoint;
+		        if (edgesAreWalls && (x == 0 || y == 0 || x == map.GetUpperBound(0) - 1 || y == map.GetUpperBound(1) - 1))
+			        map[x, y] = 1;
+		        else
+		        {
+			        //Generate a new point using perlin noise, then round it to a value of either 0 or 1
+			        newPoint = Mathf.RoundToInt(Mathf.PerlinNoise(x * modifier, y * modifier));
+			        map[x, y] = newPoint;
+		        }
 	        }
         }
-
-        for (int y = 0; y < map.GetUpperBound(1); y++)
-        {
-	        var dontHaveCave = true;
-	        for (int x = map.GetUpperBound(0) - intervalExit; x < map.GetUpperBound(0)-1; x++)
-	        {
-		        dontHaveCave = map[x, y] == 0;
-		        if(!dontHaveCave) break;
-	        }
-	        if (edgesAreWalls && !dontHaveCave)
-	        {
-		        map[map.GetUpperBound(0) - 1, y] = 1;
-	        }
-        }
+        
+        if (edgesAreWalls) map = CalculateEdges(map, intervalExit, ref outputs);
 
         return map;
     }
-
-    /// <summary>
-	/// Used to create a new cave using the Random Walk Algorithm. Doesn't exit out of bounds.
-	/// </summary>
-	/// <param name="map">The array that holds the map information</param>
-	/// <param name="seed">The seed for the random</param>
-	/// <param name="requiredFloorPercent">The amount of floor we want</param>
-	/// <returns>The modified map array</returns>
-	public static int[,] RandomWalkCave(int[,] map, float seed,  int requiredFloorPercent)
-    {
-        //Seed our random
-        System.Random rand = new System.Random(seed.GetHashCode());
-
-        //Define our start x position
-        int floorX = rand.Next(1, map.GetUpperBound(0) - 1);
-        //Define our start y position
-        int floorY = rand.Next(1, map.GetUpperBound(1) - 1);
-        //Determine our required floorAmount
-        int reqFloorAmount = ((map.GetUpperBound(1) * map.GetUpperBound(0)) * requiredFloorPercent) / 100; 
-        //Used for our while loop, when this reaches our reqFloorAmount we will stop tunneling
-        int floorCount = 0;
-
-        //Set our start position to not be a tile (0 = no tile, 1 = tile)
-        map[floorX, floorY] = 0;
-        //Increase our floor count
-        floorCount++; 
-        
-        while (floorCount < reqFloorAmount)
-        { 
-            //Determine our next direction
-            int randDir = rand.Next(4); 
-
-            switch (randDir)
-            {
-                case 0: //Up
-                    //Ensure that the edges are still tiles
-                    if ((floorY + 1) < map.GetUpperBound(1) - 1) 
-                    {
-                        //Move the y up one
-                        floorY++;
-
-                        //Check if that piece is currently still a tile
-                        if (map[floorX, floorY] == 1) 
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase floor count
-                            floorCount++; 
-                        }
-                    }
-                    break;
-                case 1: //Down
-                    //Ensure that the edges are still tiles
-                    if ((floorY - 1) > 1)
-                    { 
-                        //Move the y down one
-                        floorY--;
-                        //Check if that piece is currently still a tile
-                        if (map[floorX, floorY] == 1) 
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++; 
-                        }
-                    }
-                    break;
-                case 2: //Right
-                    //Ensure that the edges are still tiles
-                    if ((floorX + 1) < map.GetUpperBound(0) - 1)
-                    {
-                        //Move the x to the right
-                        floorX++;
-                        //Check if that piece is currently still a tile
-                        if (map[floorX, floorY] == 1) 
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++; 
-                        }
-                    }
-                    break;
-                case 3: //Left
-                    //Ensure that the edges are still tiles
-                    if ((floorX - 1) > 1)
-                    {
-                        //Move the x to the left
-                        floorX--;
-                        //Check if that piece is currently still a tile
-                        if (map[floorX, floorY] == 1) 
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++; 
-                        }
-                    }
-                    break;
-            }
-        }
-        //Return the updated map
-        return map; 
-    }
-
-	/// <summary>
-	/// EXPERIMENTAL 
-	/// Generates a random walk cave but with the option to move in any of the 8 directions
-	/// </summary>
-	/// <param name="map">The map array to change</param>
-	/// <param name="seed">The seed for the random</param>
-	/// <param name="requiredFloorPercent">Required amouount of floor to remove</param>
-	/// <returns>The modified map array</returns>
-	public static int[,] RandomWalkCaveCustom(int[,] map, float seed,  int requiredFloorPercent)
-    {
-        //Seed our random
-        System.Random rand = new System.Random(seed.GetHashCode());
-
-        //Define our start x position
-        int floorX = Random.Range(1, map.GetUpperBound(0) - 1);
-        //Define our start y position
-        int floorY = Random.Range(1, map.GetUpperBound(1) - 1);
-        //Determine our required floorAmount
-        int reqFloorAmount = ((map.GetUpperBound(1) * map.GetUpperBound(0)) * requiredFloorPercent) / 100;
-        //Used for our while loop, when this reaches our reqFloorAmount we will stop tunneling
-        int floorCount = 0;
-
-        //Set our start position to not be a tile (0 = no tile, 1 = tile)
-        map[floorX, floorY] = 0;
-        //Increase our floor count
-        floorCount++;
-
-        while (floorCount < reqFloorAmount)
-        {
-            //Determine our next direction
-            int randDir = rand.Next(8);
-
-            switch (randDir)
-            {
-                case 0: //North-West
-                    //Ensure we don't go off the map
-                    if ((floorY + 1) < map.GetUpperBound(1) && (floorX -1) > 0)
-                    {
-                        //Move the y up 
-                        floorY++;
-                        //Move the x left
-                        floorX--;
-
-                        //Check if the position is a tile
-                        if (map[floorX, floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-                case 1: //North
-                    //Ensure we don't go off the map
-                    if ((floorY + 1) < map.GetUpperBound(1))
-                    {
-                        //Move the y up
-                        floorY++;
-
-                        //Check if the position is a tile
-                        if (map[floorX, floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-                case 2: //North-East
-                    //Ensure we don't go off the map
-                    if ((floorY + 1) < map.GetUpperBound(1) && (floorX + 1) < map.GetUpperBound(0))
-                    {
-                        //Move the y up
-                        floorY++;
-                        //Move the x right
-                        floorX++;
-
-                        //Check if the position is a tile
-                        if (map[floorX, floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-                case 3: //East
-                    //Ensure we don't go off the map
-                    if ((floorX + 1) < map.GetUpperBound(0))
-                    {
-                        //Move the x right
-                        floorX++;
-
-                        //Check if the position is a tile
-                        if (map[floorX, floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++; 
-                        }
-                    }
-                    break;
-                case 4: //South-East
-                    //Ensure we don't go off the map
-                    if((floorY -1) > 0 && (floorX + 1) < map.GetUpperBound(0))
-                    {
-                        //Move the y down
-                        floorY--;
-                        //Move the x right
-                        floorX++;
-
-                        //Check if the position is a tile
-                        if(map[floorX,floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-                case 5: //South
-                    //Ensure we don't go off the map
-                    if((floorY - 1) > 0)
-                    {
-                        //Move the y down
-                        floorY--;
-
-                        //Check if the position is a tile
-                        if(map[floorX,floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-                case 6: //South-West
-                    //Ensure we don't go off the map
-                    if((floorY - 1) > 0 && (floorX - 1) > 0)
-                    {
-                        //Move the y down
-                        floorY--;
-                        //move the x left
-                        floorX--;
-
-                        //Check if the position is a tile
-                        if(map[floorX,floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-                case 7: //West
-                    //Ensure we don't go off the map
-                    if((floorX - 1) > 0)
-                    {
-                        //Move the x left
-                        floorX--;
-                        
-                        //Check if the position is a tile
-                        if(map[floorX,floorY] == 1)
-                        {
-                            //Change it to not a tile
-                            map[floorX, floorY] = 0;
-                            //Increase the floor count
-                            floorCount++;
-                        }
-                    }
-                    break;
-            }
-        }
-
-        return map; 
-    }
-    
-    /// <summary>
-    /// Creates a tunnel of length height. Takes into account roughness and windyness
-    /// </summary>
-    /// <param name="map">The array that holds the map information</param>
-    /// <param name="width">The width of the map</param>
-    /// <param name="height">The height of the map</param>
-    /// <param name="minPathWidth">The min width of the path</param>
-    /// <param name="maxPathWidth">The max width of the path, ensure it is smaller than then width of the map</param>
-    /// <param name="maxPathChange">The max amount we can change the center point of the path by</param>
-    /// <param name="roughness">How much the edges of the tunnel vary</param>
-    /// <param name="windyness">how much the direction of the tunnel varies</param>
-    /// <returns>The map after being tunneled</returns>
+	
     public static int[,] DirectionalTunnel(int[,] map, int minPathWidth, int maxPathWidth, int maxPathChange, int roughness, int windyness)
     {
 		//This value goes from its minus counterpart to its positive value, in this case with a width value of 1, the width of the tunnel is 3
 		int tunnelWidth = 1; 
 		
 		//Set the start X position to the center of the tunnel
-		int x = map.GetUpperBound(0) / 2; 
+		int x = map.GetUpperBound(1) / 2; 
 
 		//Set up our seed for the random.
 		System.Random rand = new System.Random(Time.time.GetHashCode()); 
@@ -454,11 +147,11 @@ public class MapFunctions
 		//Create the first part of the tunnel
 		for (int i = -tunnelWidth; i <= tunnelWidth; i++) 
         {
-            map[x + i, 0] = 0;
+            map[0, x + i] = 0;
         }
 
 		//Cycle through the array
-		for (int y = 1; y < map.GetUpperBound(1); y++) 
+		for (int y = 1; y < map.GetUpperBound(0); y++) 
         {
 			//Check if we can change the roughness
 			if (rand.Next(0, 100) > roughness) 
@@ -494,9 +187,9 @@ public class MapFunctions
                     x = maxPathWidth;
                 }
 				//Check we arent too close to the right side of the map
-				if (x > (map.GetUpperBound(0) - maxPathWidth)) 
+				if (x > (map.GetUpperBound(1) - maxPathWidth)) 
                 {
-                    x = map.GetUpperBound(0) - maxPathWidth;
+                    x = map.GetUpperBound(1) - maxPathWidth;
                 }
 
             }
@@ -504,22 +197,12 @@ public class MapFunctions
 			//Work through the width of the tunnel
 			for (int i = -tunnelWidth; i <= tunnelWidth; i++)
 			{ 
-                map[x + i, y] = 0;
+                map[y, x + i] = 0;
             }
         }
         return map;
     }
     
-    /// <summary>
-    /// Creates the basis for our Advanced Cellular Automata functions.
-    /// We can then input this map into different functions depending on
-    /// what type of neighbourhood we want
-    /// </summary>
-    /// <param name="map">The array to be modified</param>
-    /// <param name="seed">The seed we will use</param>
-    /// <param name="fillPercent">The amount we want the map filled</param>
-    /// <param name="edgesAreWalls">Whether we want the edges to be walls</param>
-    /// <returns>The modified map array</returns>
     public static int[,] GenerateCellularAutomata(int width, int height, float seed, int fillPercent, bool edgesAreWalls)
     {
 		//Seed our random number generator
@@ -534,27 +217,14 @@ public class MapFunctions
             for (int y = 0; y < map.GetUpperBound(1); y++)
             {
                 if (edgesAreWalls && (x == 0 || x == map.GetUpperBound(0) - 1 || y == map.GetUpperBound(1) - 1))
-                {
-					//Set the cell to be active if edges are walls
-                    map[x, y] = 1;
-                }
+	                map[x, y] = 1;
                 else
-                {
-					//Set the cell to be active if the result of rand.Next() is less than the fill percentage
-                    map[x, y] = (rand.Next(0, 100) < fillPercent) ? 1 : 0; 
-                }
+                    map[x, y] = (rand.Next(0, 100) < fillPercent) ? 1 : 0;
             }
         }
         return map;
     }
-
-    /// <summary>
-    /// Smooths the map using the von Neumann Neighbourhood rules
-    /// </summary>
-    /// <param name="map">The map we will Smooth</param>
-	/// <param name="edgesAreWalls">Whether the edges are walls or not</param>
-	/// <param name="smoothCount">The amount we will loop through to smooth the array</param>
-    /// <returns>The modified map array</returns>
+    
     public static int[,] SmoothVNCellularAutomata(int[,] map, int intervalExit, bool edgesAreWalls, int smoothCount)
     {
 		for (int i = 0; i < smoothCount; i++)
@@ -589,15 +259,8 @@ public class MapFunctions
 		
         return map;
     }
-
-    /// <summary>
-    /// Gets the surrounding tiles using the von Neumann Neighbourhood rules. This neighbourhood only checks the direct neighbours, i.e. Up, Left, Down Right
-    /// </summary>
-    /// <param name="map">The map we are checking</param>
-    /// <param name="x">The x position we are checking</param>
-    /// <param name="y">The y position we are checking</param>
-    /// <returns>The amount of neighbours the tile map[x,y] has</returns>
-	static int GetVNSurroundingTiles(int[,] map, int x, int y, bool edgesAreWalls)
+    
+    private static int GetVNSurroundingTiles(int[,] map, int x, int y, bool edgesAreWalls)
 	{
 		/* von Neumann Neighbourhood looks like this ('T' is our Tile, 'N' is our Neighbour)
 		* 
@@ -651,15 +314,7 @@ public class MapFunctions
 
 		return tileCount;
 	}
-
-    /// <summary>
-    /// Smoothes a map using Moore's Neighbourhood Rules. Moores Neighbourhood consists of all neighbours of the tile, including diagonal neighbours
-    /// </summary>
-    /// <param name="map">The map to modify</param>
-    /// <param name="edgesAreWalls">Whether our edges should be walls</param>
-    /// <param name="smoothCount">The amount we will loop through to smooth the array</param>
-    /// <param name="outputs">For delete tile where input</param>
-    /// <returns>The modified map</returns>
+    
     public static int[,] SmoothMooreCellularAutomata(int[,] map, int intervalExit, bool edgesAreWalls, int smoothCount, ref int[] outputs)
 	{
 		for (int i = 0; i < smoothCount; i++)
@@ -693,16 +348,8 @@ public class MapFunctions
 		
         return map;
     }
-
-	/// <summary>
-    /// Gets the surrounding amount of tiles using the Moore Neighbourhood
-    /// </summary>
-    /// <param name="map">The map to check</param>
-    /// <param name="x">The x position we are checking</param>
-    /// <param name="y">The y position we are checking</param>
-    /// <param name="edgesAreWalls">Whether the edges are walls</param>
-    /// <returns>An int with the amount of surrounding tiles</returns>
-    static int GetMooreSurroundingTiles(int[,] map, int x, int y)
+    
+	private static int GetMooreSurroundingTiles(int[,] map, int x, int y)
     {
         /* Moore Neighbourhood looks like this ('T' is our tile, 'N' is our neighbours)
          * 
@@ -732,7 +379,7 @@ public class MapFunctions
         }
         return tileCount;
     }
-    
+
 	private static int[,] CalculateEdges(int[,] map, int intervalExit, ref int[] outputs)
 	{
 		for (int y = 0; y < map.GetUpperBound(1); y++)
@@ -745,7 +392,7 @@ public class MapFunctions
 			}
 
 			if (!dontHaveCave) continue;
-			map[map.GetUpperBound(0) - 1, y] = 2;
+			map[map.GetUpperBound(0) - 1, y] = 0;
 			outputs[y] = 1;
 		}
 		return map;

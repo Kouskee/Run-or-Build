@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ce18e3db0db7324786340708bd9d611, type: 3}
   m_Name: Moore
   m_EditorClassIdentifier: 
-  algorithm: 4
+  algorithm: 2
   randomSeed: 1
   seed: 0.91
-  fillAmount: 45
-  smoothAmount: 1
+  fillAmount: 48
+  smoothAmount: 5
   clearAmount: 56
   intervalToExit: 3
   minPathWidth: 35
